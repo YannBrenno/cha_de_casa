@@ -1,166 +1,287 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lista de Compras</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chá de Casa Nova - Camila & Yann</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    padding: 20px;
+  :root{
+    --bg:#fafafa; --card:#fff; --muted:#6b7280; --accent:#0d9488;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background:var(--bg);
+    color:#111;
+    padding:14px;
+    -webkit-font-smoothing:antialiased;
   }
 
-  .item {
-    padding: 12px;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    border: 1px solid #ddd;
+  header{ text-align:center; margin-bottom:12px }
+  header h1{ margin:0; font-size:20px; font-weight:700 }
+  header p{ margin:4px 0 0 0; color:var(--muted); font-size:13px }
+
+  /* mobile single-column */
+  #lista{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 6px 18px rgba(12,15,20,0.06);
+    padding:12px;
+    overflow:hidden;
   }
 
-  .item.esgotado {
-    opacity: 0.4;
-    pointer-events: none;
-    filter: grayscale(1);
-  }
+.img-box{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  overflow:hidden;
+  margin:0 auto; /* centraliza */
+  background:#f3f3f3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-  #modal {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
+.img-box img{
+  width:100%;
+  height:100%;
+  object-fit:contain; /* exibe a imagem completa */
+  display:block;
+}
 
-  #modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 350px;
-  }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; }
+  .title { font-weight:700; font-size:16px; }
+  .qty { color:var(--muted); font-size:13px; }
 
-  button {
-    margin-top: 10px;
-    padding: 10px;
-    width: 100%;
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+  .buyers { margin-top:8px; color:#333; font-size:13px; line-height:1.2; }
+  .btn { width:100%; display:block; padding:12px; border-radius:10px; background:var(--accent); color:white; text-align:center; font-weight:700; margin-top:10px; }
+
+  .card.esgotado{ filter:grayscale(1) brightness(.9); opacity:.7 }
+  .card .btn.disabled{ background:#cbd5e1; cursor:not-allowed; }
+
+  /* modal */
+  #modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); padding:16px; z-index:9999 }
+  #modal .box{ width:100%; max-width:420px; background:white; border-radius:12px; padding:16px; box-shadow:0 25px 60px rgba(2,6,23,0.3) }
+  .input{ width:100%; padding:12px; border-radius:10px; border:1px solid #e6e9ee; margin-top:8px; font-size:15px }
+  .row-buttons{ display:flex; gap:8px; margin-top:12px }
+  .btn-secondary{ flex:1; background:#f3f4f6; color:#111; border-radius:10px; padding:10px; text-align:center; font-weight:700 }
+
+  /* small helper */
+  .muted{ color:var(--muted); font-size:13px }
 </style>
 </head>
-
 <body>
 
-<h2>Lista de Presentes</h2>
+<header>
+  <h1>Chá de Casa Nova</h1>
+  <p>Camila &amp; Yann</p>
+</header>
 
-<div id="lista"></div>
+<main>
+  <div id="lista"></div>
+  <div id="status" style="text-align:center;margin-top:10px;color:var(--muted);font-size:13px"></div>
+</main>
 
 <!-- Modal -->
 <div id="modal">
-  <div id="modal-content">
-    <h3 id="modal-item"></h3>
+  <div class="box" role="dialog" aria-modal="true">
+    <div style="font-weight:800;font-size:16px" id="modal-title">Presentear</div>
+    <div class="muted" id="modal-sub" style="margin-top:6px">Descrição</div>
 
-    <label>Seu nome:</label>
-    <input id="input-nome" type="text" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <label style="margin-top:12px;display:block;font-weight:700;font-size:13px">Seu nome</label>
+    <input id="input-name" class="input" placeholder="Ex: Camila">
 
-    <label>Quantidade:</label>
-    <input id="input-quantidade" type="number" min="1" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <label style="margin-top:6px;display:block;font-weight:700;font-size:13px">Quantidade</label>
+    <input id="input-qtd" class="input" type="number" min="1" value="1">
 
-    <button onclick="comprar()">Comprar</button>
-    <button onclick="fecharModal()" style="background:#777;margin-top:5px;">Cancelar</button>
+    <div class="row-buttons">
+      <div id="confirm-btn" class="btn" style="flex:1">Confirmar</div>
+      <div id="cancel-btn" class="btn-secondary" style="flex:1">Cancelar</div>
+    </div>
   </div>
 </div>
 
 <script>
-const URL_WEBAPP = "https://script.google.com/macros/s/AKfycbzrpcR8VB_-rR0YROnhjIt4t_iOZ0YAwCr-aaad--OZ3E_0CdrtScbLEszKaNeC9hNIOQ/exec";
+/* ===================
+   CONFIG
+   =================== */
+// sua URL do WebApp (já publicada)
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxV7z8tTo54SrDHuNjufFf4JDp2RDv_NfBk8KStYPCTwERUJlvn9wlZyMVi9Pr7wdL94w/exec";
 
-const itens = [
-  { nome: "Panela Antiaderente", max: 3, comprado: 0, compradores: [] },
-  { nome: "Jogo de Toalhas", max: 2, comprado: 0, compradores: [] },
-  { nome: "Conjunto de Pratos", max: 4, comprado: 0, compradores: [] }
+/* ===================
+   CATALOGO (fácil de editar)
+   Adicione/edite items aqui (um por linha)
+   =================== */
+const CATALOGO = [
+  { nome: "Conjunto de Panelas", estoque: 2, foto: "https://m.media-amazon.com/images/I/61HtPbD+j5L._AC_SX679_.jpg" },
+  { nome: "Jogo de Toalhas", estoque: 4, foto: "https://http2.mlstatic.com/D_NQ_NP_2X_656592-MLB94262886503_102025-F-jogo-toalhas-luxo-gigante-4-banho-toalhas-grande-karsten.webp" },
+  { nome: "Conjunto de Pratos", estoque: 6, foto: "https://m.media-amazon.com/images/I/51orrGI12ML._AC_SY300_SX300_QL70_ML2_.jpg" },
+  { nome: "Liquidificador", estoque: 1, foto: "https://m.media-amazon.com/images/I/71L1g-qsmtL._AC_SY300_SX300_QL70_ML2_.jpg" }
 ];
 
-let itemSelecionado = null;
+/* ===================
+   Estado local
+   =================== */
+let itens = []; // cópia do catálogo + compradores atualizados pela planilha
+let selectedIdx = null;
 
-function renderizarLista() {
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  itens.forEach((item, index) => {
-    const restante = item.max - item.comprado;
-
-    const div = document.createElement("div");
-    div.className = "item" + (restante === 0 ? " esgotado" : "");
-    div.onclick = () => abrirModal(index);
-
-    div.innerHTML = `
-      <strong>${item.nome}</strong><br>
-      Restante: ${restante}<br>
-      Compradores: ${item.compradores.join(", ") || "Nenhum ainda"}
+/* ===================
+   Render
+   =================== */
+function render(){
+  const lista = document.getElementById('lista');
+  lista.innerHTML = '';
+  itens.forEach((it, idx) => {
+    const restante = Math.max(0, it.estoque - (it.comprado || 0));
+    const esgotado = restante === 0;
+    const card = document.createElement('div');
+    card.className = 'card' + (esgotado ? ' esgotado' : '');
+    card.innerHTML = `
+      <div class="img-box"><img src="${it.foto}" alt="${escapeHtml(it.nome)}"></div>
+      <div class="row"><div class="title">${escapeHtml(it.nome)}</div><div class="qty">${restante} disponível</div></div>
+      ${ (it.compradores && it.compradores.length) ? `<div class="buyers"><strong>Comprado por:</strong><br>${it.compradores.join('<br>')}</div>` : '' }
+      ${ esgotado ? '<div class="btn disabled" aria-disabled="true">Esgotado</div>' : '<div class="btn" data-idx="'+idx+'">Presentear</div>' }
     `;
+    lista.appendChild(card);
+  });
 
-    lista.appendChild(div);
+  // attach events for buy buttons
+  document.querySelectorAll('.btn[data-idx]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      const idx = Number(el.getAttribute('data-idx'));
+      openModal(idx);
+    });
   });
 }
 
-function abrirModal(index) {
-  itemSelecionado = index;
-  document.getElementById("modal-item").innerText = itens[index].nome;
-  document.getElementById("modal").style.display = "flex";
+/* escape helper */
+function escapeHtml(s){ return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ===================
+   JSONP loader (carregar dados da planilha)
+   - injeta <script src="WEBAPP_URL?callback=cb_...">
+   - espera doGet do GAS responder callback({...})
+   =================== */
+function loadFromSheet(){
+  showStatus('Carregando dados...');
+  // create unique callback name
+  const cb = 'cb_'+Math.floor(Math.random()*9999999);
+  window[cb] = function(res){
+    try {
+      if(!res || res.status !== 'ok'){ showStatus('Erro ao carregar (resposta inválida)'); cleanup(); return; }
+      // build local items from catalog copy
+      itens = CATALOGO.map(c => ({ nome: c.nome, estoque: c.estoque, foto: c.foto, comprado:0, compradores: [] }));
+
+      // res.rows: [{ts, nome, item, qtd}, ...]
+      res.rows.forEach(r => {
+        if(!r.item) return;
+        const found = itens.find(x => x.nome.trim().toLowerCase() === String(r.item).trim().toLowerCase());
+        if(found){
+          const q = Number(r.qtd) || 1;
+          found.comprado = (found.comprado || 0) + q;
+          // show buyer name; if empty, use placeholder
+          const buyerName = r.nome && r.nome.trim() ? r.nome.trim() : 'Anônimo';
+          found.compradores.push(`${escapeHtml(buyerName)} (${q})`);
+        } else {
+          // item not in catalog: ignore (or optionally push)
+        }
+      });
+
+      render();
+      showStatus('');
+    } catch(e){
+      console.error(e);
+      showStatus('Erro processando dados');
+    } finally { cleanup(); }
+    function cleanup(){ const s = document.getElementById(cb+'_script'); if(s) s.remove(); try{ delete window[cb]; }catch{} }
+  };
+
+  // inject script tag
+  const script = document.createElement('script');
+  script.id = cb + '_script';
+  const url = new URL(WEBAPP_URL);
+  url.searchParams.set('callback', cb);
+  url.searchParams.set('action', 'get');
+  // append timestamp to avoid aggressive caching
+  url.searchParams.set('_t', Date.now());
+  script.src = url.toString();
+  script.onerror = () => { showStatus('Erro carregando dados (script)'); try{ delete window[cb]; }catch{} };
+  document.body.appendChild(script);
 }
 
-function fecharModal() {
-  document.getElementById("modal").style.display = "none";
+/* ===================
+   Modal functions
+   =================== */
+function openModal(idx){
+  selectedIdx = idx;
+  const it = itens[idx];
+  document.getElementById('modal-title').innerText = it.nome;
+  document.getElementById('modal-sub').innerText = `Disponível: ${Math.max(0, it.estoque - (it.comprado||0))}`;
+  document.getElementById('input-name').value = ''; 
+  document.getElementById('input-qtd').value = 1;
+  document.getElementById('modal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('input-name').focus(),120);
 }
+function closeModal(){ document.getElementById('modal').style.display = 'none'; }
 
-function comprar() {
-  const nome = document.getElementById("input-nome").value.trim();
-  const qtd = parseInt(document.getElementById("input-quantidade").value);
+/* ===================
+   Send purchase (POST form-encoded + no-cors)
+   =================== */
+async function confirmPurchase(){
+  const name = document.getElementById('input-name').value.trim();
+  const qtd = Math.max(1, Number(document.getElementById('input-qtd').value) || 1);
+  if(!name){ alert('Digite seu nome'); return; }
+  const it = itens[selectedIdx];
+  const available = Math.max(0, it.estoque - (it.comprado||0));
+  if(qtd > available){ alert('Quantidade maior que o disponível'); return; }
 
-  if (!nome || !qtd) {
-    alert("Preencha nome e quantidade.");
-    return;
+  // optimistic local update
+  it.comprado = (it.comprado||0) + qtd;
+  it.compradores.push(`${escapeHtml(name)} (${qtd})`);
+  render();
+  closeModal();
+  showStatus('Enviando...');
+
+  // send form-encoded body using URLSearchParams & no-cors
+  const body = new URLSearchParams({ nome: name, item: it.nome, qtd: String(qtd) });
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body
+    });
+    // schedule a refresh to get latest state from sheet
+    setTimeout(loadFromSheet, 1200);
+    showStatus('Compra registrada (sincronizando...)');
+  } catch(err){
+    console.warn('fetch no-cors erro:', err);
+    showStatus('Erro ao enviar (verifique conexão)');
   }
-
-  const item = itens[itemSelecionado];
-
-  if (item.comprado + qtd > item.max) {
-    alert("Quantidade excede o limite disponível!");
-    return;
-  }
-
-  // Atualiza local
-  item.comprado += qtd;
-  item.compradores.push(`${nome} (${qtd})`);
-
-  renderizarLista();
-  fecharModal();
-
-  // Envia para a planilha
-  fetch(URL_WEBAPP, {
-    method: "POST",
-    body: JSON.stringify({
-      nome: nome,
-      item: item.nome,
-      quantidade: qtd
-    })
-  })
-  .then(r => r.json())
-  .then(res => console.log("Resposta da planilha:", res))
-  .catch(err => console.error("Erro:", err));
 }
 
-renderizarLista();
+/* ===================
+   Helpers
+   =================== */
+function showStatus(t){ document.getElementById('status').innerText = t || ''; }
+
+/* ===================
+   Events
+   =================== */
+document.getElementById('cancel-btn').addEventListener('click', closeModal);
+document.getElementById('confirm-btn').addEventListener('click', confirmPurchase);
+
+/* Close modal on backdrop click */
+document.getElementById('modal').addEventListener('click', (e)=>{
+  if(e.target === document.getElementById('modal')) closeModal();
+});
+
+/* init */
+loadFromSheet();
 </script>
-
 </body>
 </html>
