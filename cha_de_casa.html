@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lista de Presentes para Casa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #f5f5f7;
+      color: #222;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 960px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+    }
+
+    header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .list-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    .tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e2e8ff;
+      color: #27337a;
+      font-weight: 500;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .item-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .item-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #dbeafe, #f3e8ff);
+    }
+
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .item-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .item-details {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .quantity {
+      font-size: 0.85rem;
+      color: #444;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: #4b5563;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-outline:hover {
+      background: #f3f4f6;
+    }
+
+    .item-card.comprado {
+      opacity: 0.6;
+    }
+
+    .item-card.comprado::after {
+      content: "Comprado";
+      position: absolute;
+      top: 10px;
+      right: -40px;
+      transform: rotate(15deg);
+      background: #22c55e;
+      color: white;
+      padding: 4px 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+    }
+
+    .item-card.comprado .item-title,
+    .item-card.comprado .item-details {
+      text-decoration: line-through;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filters-info {
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    .filters-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .filters-buttons .btn {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+
+      header h1 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Lista de Presentes da Casa</h1>
+      <p>Escolha um item que deseja presentear e clique em “Marcar como comprado” para evitar itens repetidos.</p>
+      <div class="list-meta">
+        <span class="tag">Chá de casa nova</span>
+        <span>Compartilhe este link com amigos e família.</span>
+      </div>
+    </header>
+
+    <section class="filters">
+      <div class="filters-info" id="summaryText">
+        Carregando itens...
+      </div>
+      <div class="filters-buttons">
+        <button class="btn btn-outline" data-filter="todos">Todos</button>
+        <button class="btn btn-outline" data-filter="disponiveis">Disponíveis</button>
+        <button class="btn btn-outline" data-filter="comprados">Comprados</button>
+      </div>
+    </section>
+
+    <section class="grid" id="itemsGrid">
+      <!-- Cards criados via JS -->
+    </section>
+  </div>
+
+<script>
+  // URL do seu Apps Script publicado como Web App (EXEC)
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhBCojqfKYUU4NGeFapQE9QTatiadnw5L_SkGk66tHv0FjG7u-0TCy1iQWIn-HV1_Q4A/exec";
+
+  // Lista de itens (idealmente alinhada com as linhas da planilha)
+  const itens = [
+    { id: 1, nome: "Jogo de pratos branco", quantidade: 2, detalhes: "Conjunto de 6 pratos rasos.", imagem: "", comprado: false, comprador: "" },
+    { id: 2, nome: "Conjunto de taças", quantidade: 1, detalhes: "Taças de vidro para vinho.", imagem: "", comprado: false, comprador: "" },
+    { id: 3, nome: "Jogo de panelas", quantidade: 1, detalhes: "Antiaderente, 5 peças.", imagem: "", comprado: true, comprador: "" },
+    { id: 4, nome: "Kit de toalhas", quantidade: 3, detalhes: "Toalhas de banho macias.", imagem: "", comprado: false, comprador: "" },
+    { id: 5, nome: "Jogo de copos", quantidade: 2, detalhes: "Copos de vidro 300ml.", imagem: "", comprado: false, comprador: "" }
+  ];
+
+  const itemsGrid = document.getElementById("itemsGrid");
+  const summaryText = document.getElementById("summaryText");
+  const filterButtons = document.querySelectorAll("[data-filter]");
+
+  let filtroAtual = "todos";
+
+  function getImagePlaceholder(nome) {
+    const initials = nome
+      .split(" ")
+      .map(p => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
+    const bg = "linear-gradient(135deg, #6366f1, #ec4899)";
+    return { initials, bg };
+  }
+
+  function atualizarResumo() {
+    const total = itens.length;
+    const comprados = itens.filter(i => i.comprado).length;
+    const disponiveis = total - comprados;
+
+    summaryText.textContent =
+      `Itens: ${total} • Disponíveis: ${disponiveis} • Comprados: ${comprados}`;
+  }
+
+async function registrarCompraNoSheets(item, compradorNome) {
+  const payload = {
+    itemId: item.id,
+    itemNome: item.nome,
+    quantidade: item.quantidade,
+    detalhes: item.detalhes,
+    comprador: compradorNome,
+    comprado: item.comprado,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    console.log("Status:", res.status, "Resposta:", text);
+    // Se quiser, mostra algo na tela:
+    // alert("Registrado na planilha!");
+  } catch (err) {
+    console.error("Erro ao enviar para Google Sheets:", err);
+    alert("Não foi possível registrar na planilha agora. Tente novamente mais tarde.");
+  }
+}
+
+  function renderizarLista() {
+    itemsGrid.innerHTML = "";
+
+    const filtrados = itens.filter(item => {
+      if (filtroAtual === "disponiveis") return !item.comprado;
+      if (filtroAtual === "comprados") return item.comprado;
+      return true;
+    });
+
+    filtrados.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "item-card" + (item.comprado ? " comprado" : "");
+      card.dataset.id = item.id;
+
+      const imgWrapper = document.createElement("div");
+      const img = document.createElement("div");
+      const placeholder = getImagePlaceholder(item.nome);
+      img.style.width = "100%";
+      img.style.height = "140px";
+      img.style.borderRadius = "12px";
+      img.style.display = "flex";
+      img.style.alignItems = "center";
+      img.style.justifyContent = "center";
+      img.style.fontWeight = "700";
+      img.style.fontSize = "1.6rem";
+      img.style.color = "#fff";
+      img.style.background = placeholder.bg;
+      img.textContent = placeholder.initials;
+      imgWrapper.appendChild(img);
+
+      const info = document.createElement("div");
+      info.className = "item-info";
+
+      const title = document.createElement("h2");
+      title.className = "item-title";
+      title.textContent = item.nome;
+
+      const details = document.createElement("p");
+      details.className = "item-details";
+      details.textContent = item.detalhes;
+
+      if (item.comprador) {
+        const buyer = document.createElement("p");
+        buyer.className = "item-details";
+        buyer.style.fontStyle = "italic";
+        buyer.textContent = `Presenteado por: ${item.comprador}`;
+        info.appendChild(buyer);
+      }
+
+      info.appendChild(title);
+      info.appendChild(details);
+
+      const footer = document.createElement("div");
+      footer.className = "item-footer";
+
+      const quantity = document.createElement("span");
+      quantity.className = "quantity";
+      quantity.textContent = `Quantidade: ${item.quantidade}`;
+
+      const button = document.createElement("button");
+      button.className = "btn " + (item.comprado ? "btn-outline" : "btn-primary");
+      button.textContent = item.comprado ? "Desmarcar" : "Marcar como comprado";
+
+      button.addEventListener("click", async () => {
+        if (!item.comprado) {
+          // Vai marcar como comprado: pedir nome
+          const nome = prompt("Digite seu nome para registrar quem comprou:");
+          if (!nome || !nome.trim()) {
+            return; // se cancelar ou deixar vazio, não faz nada
+          }
+          item.comprado = true;
+          item.comprador = nome.trim();
+          salvarEstado();
+          atualizarResumo();
+          renderizarLista();
+          await registrarCompraNoSheets(item, item.comprador);
+        } else {
+          // Desmarcar
+          const confirmar = confirm("Deseja desmarcar este item como comprado?");
+          if (!confirmar) return;
+          item.comprado = false;
+          item.comprador = "";
+          salvarEstado();
+          atualizarResumo();
+          renderizarLista();
+          await registrarCompraNoSheets(item, "DESMARCADO");
+        }
+      });
+
+      footer.appendChild(quantity);
+      footer.appendChild(button);
+
+      card.appendChild(imgWrapper);
+      card.appendChild(info);
+      card.appendChild(footer);
+
+      itemsGrid.appendChild(card);
+    });
+
+    atualizarResumo();
+  }
+
+  function salvarEstado() {
+    localStorage.setItem("listaPresentesCasa", JSON.stringify(itens));
+  }
+
+  function carregarEstado() {
+    const salvo = localStorage.getItem("listaPresentesCasa");
+    if (salvo) {
+      try {
+        const dados = JSON.parse(salvo);
+        if (Array.isArray(dados)) {
+          dados.forEach(d => {
+            const idx = itens.findIndex(i => i.id === d.id);
+            if (idx !== -1) {
+              itens[idx].comprado = !!d.comprado;
+              itens[idx].comprador = d.comprador || "";
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estado", e);
+      }
+    }
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filtroAtual = btn.dataset.filter;
+      filterButtons.forEach(b => (b.className = "btn btn-outline"));
+      btn.className = "btn btn-outline btn-active";
+      renderizarLista();
+    });
+  });
+
+  carregarEstado();
+  renderizarLista();
+</script>
+
+</body>
+</html>
