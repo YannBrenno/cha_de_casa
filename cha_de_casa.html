@@ -33,6 +33,20 @@
     padding:12px;
     overflow:hidden;
   }
+  
+#contador span{
+  cursor:pointer;
+  transition:.2s;
+}
+
+#contador span.active{
+  background:var(--accent);
+  color:white;
+}
+
+#contador span.active b{
+  color:white;
+}
 
 .img-box{
   width:110px;
@@ -102,11 +116,18 @@
   <h1>Chá de Casa Nova</h1>
   <p>Camila &amp; Yann</p>
 
-  <div id="contador">
-    <span><strong>Total:</strong> <b id="total-itens">0</b></span>
-    <span><strong>Reservados:</strong> <b id="itens-reservados">0</b></span>
-    <span><strong>Disponíveis:</strong> <b id="itens-disponiveis">0</b></span>
-  </div>
+<div id="contador">
+  <span data-filter="todos" class="filtro ativo">
+    <strong>Total:</strong> <b id="total-itens">0</b>
+  </span>
+  <span data-filter="reservados" class="filtro">
+    <strong>Reservados:</strong> <b id="itens-reservados">0</b>
+  </span>
+  <span data-filter="disponiveis" class="filtro">
+    <strong>Disponíveis:</strong> <b id="itens-disponiveis">0</b>
+  </span>
+</div>
+
 </header>
 
 
@@ -205,6 +226,10 @@ const CATALOGO = [
    =================== */
 let itens = []; // cópia do catálogo + compradores atualizados pela planilha
 let selectedIdx = null;
+let filtroAtivo = 'todos'; 
+
+
+  
 
 /* ===================
    Render
@@ -212,19 +237,59 @@ let selectedIdx = null;
 function render(){
   const lista = document.getElementById('lista');
   lista.innerHTML = '';
+
   itens.forEach((it, idx) => {
     const restante = Math.max(0, it.estoque - (it.comprado || 0));
     const esgotado = restante === 0;
+    const reservado = (it.comprado || 0) > 0;
+
+    // ===== FILTRO =====
+    if (filtroAtivo === 'reservados' && !reservado) return;
+    if (filtroAtivo === 'disponiveis' && restante === 0) return;
+    // ==================
+
     const card = document.createElement('div');
     card.className = 'card' + (esgotado ? ' esgotado' : '');
+
     card.innerHTML = `
-      <div class="img-box"><img src="${it.foto}" alt="${escapeHtml(it.nome)}"></div>
-      <div class="row"><div class="title">${escapeHtml(it.nome)}</div><div class="qty">${restante} disponível</div></div>
-      ${ (it.compradores && it.compradores.length) ? `<div class="buyers"><strong>Comprado por:</strong><br>${it.compradores.join('<br>')}</div>` : '' }
-      ${ esgotado ? '<div class="btn disabled" aria-disabled="true">Esgotado</div>' : '<div class="btn" data-idx="'+idx+'">Presentear</div>' }
+      <div class="img-box">
+        <img src="${it.foto}" alt="${escapeHtml(it.nome)}">
+      </div>
+
+      <div class="row">
+        <div class="title">${escapeHtml(it.nome)}</div>
+        <div class="qty">${restante} disponível</div>
+      </div>
+
+      ${
+        reservado
+          ? `<div class="buyers">
+               <strong>Comprado por:</strong><br>
+               ${it.compradores.join('<br>')}
+             </div>`
+          : ''
+      }
+
+      ${
+        esgotado
+          ? '<div class="btn disabled" aria-disabled="true">Esgotado</div>'
+          : `<div class="btn" data-idx="${idx}">Presentear</div>`
+      }
     `;
+
     lista.appendChild(card);
   });
+
+  // eventos dos botões
+  document.querySelectorAll('.btn[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openModal(Number(btn.dataset.idx));
+    });
+  });
+
+  atualizarContador();
+}
+
 
   // attach events for buy buttons
   document.querySelectorAll('.btn[data-idx]').forEach(el => {
@@ -291,6 +356,22 @@ function loadFromSheet(){
   document.body.appendChild(script);
 }
 
+
+  document.querySelectorAll('#contador span').forEach(span => {
+  span.addEventListener('click', () => {
+    filtroAtivo = span.dataset.filter;
+
+    // visual ativo
+    document.querySelectorAll('#contador span')
+      .forEach(s => s.classList.remove('ativo'));
+
+    span.classList.add('ativo');
+
+    render();
+  });
+});
+
+  
 function atualizarContador(){
   let total = 0;
   let reservados = 0;
@@ -381,6 +462,7 @@ loadFromSheet();
 </script>
 </body>
 </html>
+
 
 
 
