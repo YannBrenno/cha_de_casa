@@ -72,6 +72,28 @@
 
   /* small helper */
   .muted{ color:var(--muted); font-size:13px }
+
+  #contador{
+  margin-top:8px;
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  font-size:13px;
+  color:var(--muted);
+  flex-wrap:wrap;
+}
+
+#contador span{
+  background:#fff;
+  padding:6px 10px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(12,15,20,0.06);
+}
+
+#contador b{
+  color:#111;
+}
+
 </style>
 </head>
 <body>
@@ -79,7 +101,14 @@
 <header>
   <h1>Chá de Casa Nova</h1>
   <p>Camila &amp; Yann</p>
+
+  <div id="contador">
+    <span><strong>Total:</strong> <b id="total-itens">0</b></span>
+    <span><strong>Reservados:</strong> <b id="itens-reservados">0</b></span>
+    <span><strong>Disponíveis:</strong> <b id="itens-disponiveis">0</b></span>
+  </div>
 </header>
+
 
 <main>
   <div id="lista"></div>
@@ -204,6 +233,7 @@ function render(){
       openModal(idx);
     });
   });
+       atualizarContador();
 }
 
 /* escape helper */
@@ -261,6 +291,24 @@ function loadFromSheet(){
   document.body.appendChild(script);
 }
 
+function atualizarContador(){
+  let total = 0;
+  let reservados = 0;
+
+  itens.forEach(it => {
+    total += it.estoque;
+    reservados += (it.comprado || 0);
+  });
+
+  const disponiveis = Math.max(0, total - reservados);
+
+  document.getElementById('total-itens').innerText = total;
+  document.getElementById('itens-reservados').innerText = reservados;
+  document.getElementById('itens-disponiveis').innerText = disponiveis;
+}
+
+
+  
 /* ===================
    Modal functions
    =================== */
@@ -333,6 +381,7 @@ loadFromSheet();
 </script>
 </body>
 </html>
+
 
 
 
