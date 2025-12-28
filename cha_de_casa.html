@@ -131,15 +131,16 @@
   /* small helper */
   .muted{ color:var(--muted); font-size:13px }
 
-  #contador{
+#contador{
   margin-top:8px;
-  display:flex;
+  display:none; /* 🔴 começa oculto */
   justify-content:center;
   gap:14px;
   font-size:13px;
   color:var(--muted);
   flex-wrap:wrap;
 }
+
 
 #contador span{
   background:#fff;
@@ -381,6 +382,8 @@ function loadFromSheet(){
 
       render();
       showStatus('');
+      mostrarFiltros();
+
     } catch(e){
       console.error(e);
       showStatus('Erro processando dados');
@@ -439,6 +442,7 @@ function atualizarContador(){
    Modal functions
    =================== */
 function openModal(idx){
+  esconderFiltros();
   selectedIdx = idx;
   const it = itens[idx];
   document.getElementById('modal-title').innerText = it.nome;
@@ -448,7 +452,7 @@ function openModal(idx){
   document.getElementById('modal').style.display = 'flex';
   setTimeout(()=>document.getElementById('input-name').focus(),120);
 }
-function closeModal(){ document.getElementById('modal').style.display = 'none'; }
+function closeModal(){ document.getElementById('modal').style.display = 'none';  mostrarFiltros();}
 
 /* ===================
    Send purchase (POST form-encoded + no-cors)
@@ -491,6 +495,14 @@ async function confirmPurchase(){
    =================== */
 function showStatus(t){ document.getElementById('status').innerText = t || ''; }
 
+  function mostrarFiltros(){
+  document.getElementById('contador').style.display = 'flex';
+}
+
+function esconderFiltros(){
+  document.getElementById('contador').style.display = 'none';
+}
+
 /* ===================
    Events
    =================== */
@@ -507,6 +519,7 @@ loadFromSheet();
 </script>
 </body>
 </html>
+
 
 
 
